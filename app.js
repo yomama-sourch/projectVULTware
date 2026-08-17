@@ -30,7 +30,6 @@
                 password: 'maybeVult3xternal2000',
                 role: 'owner',
                 profilePicture: null,
-                bio: '',
                 banned: false,
                 suspendedUntil: null,
                 created: new Date().toISOString(),
@@ -166,7 +165,6 @@
     const profileName = $('#profile-name');
     const profileRole = $('#profile-role');
     const profileStats = $('#profile-stats');
-    const profileBio = $('#profile-bio');
     const profileScripts = $('#profile-scripts');
     const profileEmpty = $('#profile-empty');
     const profileModeration = $('#profile-moderation');
@@ -212,17 +210,12 @@
     const wallpaperOpacityVal = $('#wallpaper-opacity-val');
     const wallpaperBlurSlider = $('#wallpaper-blur-slider');
     const wallpaperBlurVal = $('#wallpaper-blur-val');
-    const bioInput = $('#profile-bio-input');
-    const bioCharacterCount = $('#bio-character-count');
 
     // Feed & Filter
     const codeFeed = $('#code-feed');
     const emptyState = $('#empty-state');
     const searchInput = $('#search-input');
     const toastContainer = $('#toast-container');
-    const usersSection = $('#users-section');
-    const usersGrid = $('#users-grid');
-    const usersEmpty = $('#users-empty');
 
     // Modal
     const deleteModal = $('#delete-modal');
@@ -351,8 +344,6 @@
             userBadge.classList.add('hidden');
         }
 
-        syncProfilePictureUI();
-        syncBioUI();
         renderFeed();
     }
 
@@ -498,7 +489,6 @@
                 password,
                 role: 'member',
                 profilePicture: null,
-                bio: '',
                 banned: false,
                 suspendedUntil: null,
                 created: new Date().toISOString(),
@@ -527,8 +517,6 @@
         // Open Settings Modal
         settingsBtn.addEventListener('click', () => {
             applySettings(activeSettings);
-            syncProfilePictureUI();
-            syncBioUI();
             settingsModal.classList.remove('hidden');
         });
         syncProfilePictureUI();
@@ -539,7 +527,6 @@
         });
 
         saveSettingsBtn.addEventListener('click', () => {
-            if (bioInput) updateOwnBio(bioInput.value);
             saveSettings(activeSettings);
             settingsModal.classList.add('hidden');
             toast('Settings saved!', 'success');
@@ -616,7 +603,6 @@
             wallpaperFileInput.value = '';
             saveSettings(activeSettings);
             applySettings(activeSettings);
-            syncBioUI();
             toast('Appearance reset to defaults!', 'success');
         });
     }
@@ -627,14 +613,6 @@
         userDisplayName.addEventListener('click', () => openProfile(getSession()?.username));
         if (closeProfileBtn) closeProfileBtn.addEventListener('click', closeProfile);
         if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfile(); });
-
-        // Bio
-        if (bioInput) {
-            bioInput.addEventListener('input', () => {
-                if (bioInput.value.length > 300) bioInput.value = bioInput.value.slice(0, 300);
-                if (bioCharacterCount) bioCharacterCount.textContent = bioInput.value.length;
-            });
-        }
 
         // Profile picture upload
         if (profilePictureInput) {
@@ -770,7 +748,6 @@
             tab.addEventListener('click', () => {
                 $$('.filter-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                if (currentFilter !== tab.dataset.filter) searchInput.value = '';
                 currentFilter = tab.dataset.filter;
                 renderFeed();
             });
@@ -812,18 +789,6 @@
     const changelogSection = $('#changelog-section');
 
     function renderFeed() {
-        if (currentFilter === 'users') {
-            codeFeed.classList.add('hidden');
-            if (changelogSection) changelogSection.classList.add('hidden');
-            if (usersSection) usersSection.classList.remove('hidden');
-            searchInput.placeholder = 'Search users...';
-            renderUsers();
-            return;
-        }
-
-        if (usersSection) usersSection.classList.add('hidden');
-        searchInput.placeholder = 'Search scripts...';
-
         if (currentFilter === 'changelog') {
             codeFeed.classList.add('hidden');
             if (changelogSection) changelogSection.classList.remove('hidden');
@@ -866,33 +831,6 @@
         if (window.Prism) {
             Prism.highlightAllUnder(codeFeed);
         }
-    }
-
-    function renderUsers() {
-        if (!usersGrid || !usersEmpty) return;
-        const query = searchInput.value.trim().toLowerCase();
-        let users = getUsers();
-        if (query) users = users.filter(u => u.username.toLowerCase().includes(query));
-        users.sort((a, b) => a.username.localeCompare(b.username));
-        usersGrid.innerHTML = '';
-        usersEmpty.classList.toggle('hidden', users.length !== 0);
-        users.forEach((user, idx) => {
-            const scripts = getScripts().filter(s => s.author.toLowerCase() === user.username.toLowerCase());
-            const card = document.createElement('button');
-            card.type = 'button';
-            card.className = 'user-directory-card';
-            card.style.animationDelay = `${idx * 0.04}s`;
-            card.innerHTML = `
-                <div class="user-directory-avatar">${avatarMarkup(user)}</div>
-                <div class="user-directory-info">
-                    <div class="user-directory-name">${escapeHtml(user.username)} ${user.role === 'owner' ? '<span class="card-author-badge">OWNER</span>' : ''}</div>
-                    <div class="user-directory-bio">${escapeHtml(user.bio || 'No bio yet.')}</div>
-                    <div class="user-directory-stats">${scripts.length} script${scripts.length === 1 ? '' : 's'} shared</div>
-                </div>
-            `;
-            card.addEventListener('click', () => openProfile(user.username));
-            usersGrid.appendChild(card);
-        });
     }
 
     // ─── Create Card ───
@@ -1019,8 +957,6 @@
         const scripts = getScripts().filter(s => s.author.toLowerCase() === user.username.toLowerCase());
         profileAvatar.innerHTML = avatarMarkup(user);
         profileName.textContent = user.username;
-        profileBio.textContent = user.bio || 'No bio yet.';
-        profileBio.classList.toggle('empty', !user.bio);
         profileRole.textContent = user.role === 'owner' ? 'OWNER' : 'MEMBER';
         profileStats.textContent = `${scripts.length} script${scripts.length === 1 ? '' : 's'} shared`;
 
@@ -1045,25 +981,6 @@
     function closeProfile() {
         activeProfileUsername = null;
         if (profileModal) profileModal.classList.add('hidden');
-    }
-
-    function updateOwnBio(bio) {
-        const session = getSession();
-        if (!session) return;
-        const users = getUsers();
-        const idx = users.findIndex(u => u.username.toLowerCase() === session.username.toLowerCase());
-        if (idx === -1) return;
-        users[idx].bio = String(bio || '').trim().slice(0, 300);
-        saveUsers(users);
-        if (activeProfileUsername) openProfile(activeProfileUsername);
-        toast('Bio updated!', 'success');
-    }
-
-    function syncBioUI() {
-        const session = getSession();
-        const user = session ? getUser(session.username) : null;
-        if (bioInput) bioInput.value = user?.bio || '';
-        if (bioCharacterCount) bioCharacterCount.textContent = bioInput ? bioInput.value.length : 0;
     }
 
     function updateOwnProfilePicture(profilePicture) {
