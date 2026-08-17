@@ -1067,8 +1067,8 @@ body {
 
 /* ─── Settings Modal ─── */
 .settings-modal-card {
-    max-width: 520px;
-    width: 92%;
+    max-width: 760px;
+    width: min(94%, 760px);
     padding: 32px;
 }
 
@@ -1465,3 +1465,68 @@ body {
 .profile-script-section h4 { margin-bottom:12px; font-size:.95rem; }
 .profile-scripts { display:flex; flex-direction:column; gap:14px; }
 .profile-empty { color:var(--text-secondary); padding:24px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md); }
+
+
+/* ─── User Directory ─── */
+.users-section {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.users-section-header h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.users-section-header p { margin: 0; color: var(--text-muted); font-size: .82rem; }
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+.user-directory-card {
+    appearance: none;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+    padding: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: transform .2s, border-color .2s, background .2s;
+    animation: cardFadeIn .35s ease both;
+}
+.user-directory-card:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--bg-hover); }
+.user-directory-avatar { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; border: 1px solid var(--border); }
+.user-directory-info { min-width: 0; flex: 1; }
+.user-directory-name { display:flex; align-items:center; gap:7px; font-weight: 750; margin-bottom: 5px; }
+.user-directory-bio { color: var(--text-secondary); font-size: .78rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.25em; }
+.user-directory-stats { margin-top: 7px; color: var(--text-muted); font-size: .72rem; }
+.users-empty { padding: 28px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--text-muted); }
+.settings-textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font: inherit;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+.settings-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.settings-textarea::placeholder { color: var(--text-muted); }
+.profile-bio {
+    margin: 7px 0 0 !important;
+    max-width: 520px;
+    color: var(--text-secondary);
+    font-size: .82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.profile-bio.empty { color: var(--text-muted); font-style: italic; }
