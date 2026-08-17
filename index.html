@@ -189,6 +189,7 @@
             <section class="filter-bar" id="filter-bar">
                 <div class="filter-tabs">
                     <button class="filter-tab active" data-filter="script">Scripts</button>
+                    <button class="filter-tab" data-filter="chatbot">Chatbot</button>
                     <button class="filter-tab" data-filter="all">All</button>
                     <button class="filter-tab" data-filter="gui">GUI</button>
                     <button class="filter-tab" data-filter="tool">Tools</button>
@@ -202,6 +203,59 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" id="search-input" placeholder="Search scripts...">
                 </div>
+            </section>
+
+            <!-- AI Chatbot -->
+            <section class="chatbot-container hidden" id="chatbot-section">
+                <div class="chatbot-header">
+                    <div>
+                        <h2>Vultware AI</h2>
+                        <p>Use your own AI API key to chat. Your key stays in this browser and is never stored in Vultware's database.</p>
+                    </div>
+                    <button type="button" class="btn-ghost chatbot-settings-toggle" id="chatbot-settings-toggle">AI Settings</button>
+                </div>
+
+                <div class="chatbot-settings hidden" id="chatbot-settings">
+                    <div class="chatbot-setting-grid">
+                        <div>
+                            <label class="settings-label" for="ai-provider">Provider</label>
+                            <select id="ai-provider" class="input-field">
+                                <option value="cerebras">Cerebras</option>
+                                <option value="custom">Custom OpenAI-compatible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="settings-label" for="ai-model">Model</label>
+                            <input id="ai-model" class="input-field" type="text" value="llama-3.3-70b" placeholder="Model name">
+                        </div>
+                        <div class="chatbot-key-field">
+                            <label class="settings-label" for="ai-api-key">API Key</label>
+                            <input id="ai-api-key" class="input-field" type="password" autocomplete="off" placeholder="Paste your API key">
+                            <a class="api-key-link" id="need-api-key-link" href="https://cloud.cerebras.ai/platform/org_526rrjpxfhfjcwfcnkptjrxt/project/prj_r9cd2tvchvyhjerfhntk5fpc/apikeys" target="_blank" rel="noopener noreferrer">Need an API key?</a>
+                        </div>
+                        <div id="custom-endpoint-wrap" class="hidden">
+                            <label class="settings-label" for="ai-endpoint">API Endpoint</label>
+                            <input id="ai-endpoint" class="input-field" type="url" placeholder="https://example.com/v1/chat/completions">
+                        </div>
+                    </div>
+                    <div class="chatbot-settings-actions">
+                        <span class="chatbot-key-note">API keys are saved only in your browser's local storage.</span>
+                        <button type="button" class="btn-primary" id="save-ai-settings">Save AI Settings</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-empty" id="chat-empty">
+                        <div class="chat-empty-icon">✦</div>
+                        <h3>Ask Vultware AI</h3>
+                        <p>Add your own API key above, then ask anything about Roblox, Luau, or your scripts.</p>
+                    </div>
+                </div>
+
+                <form class="chat-input-row" id="chat-form">
+                    <textarea id="chat-input" rows="2" maxlength="4000" placeholder="Ask Vultware AI something..."></textarea>
+                    <button type="submit" class="btn-primary" id="chat-send-btn">Send</button>
+                </form>
             </section>
 
             <!-- Code Feed -->
