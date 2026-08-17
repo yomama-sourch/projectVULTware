@@ -1067,17 +1067,19 @@ body {
 
 /* ─── Settings Modal ─── */
 .settings-modal-card {
-    max-width: 760px;
-    width: min(94%, 760px);
-    padding: 32px;
+    max-width: 980px;
+    width: min(94vw, 980px);
+    max-height: 82vh;
+    padding: 24px 30px;
+    overflow-y: auto;
 }
 
 .settings-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -1113,13 +1115,13 @@ body {
 .settings-content {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 14px;
 }
 
 .settings-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .settings-label {
@@ -1260,8 +1262,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 28px;
-    padding-top: 16px;
+    margin-top: 18px;
+    padding-top: 12px;
     border-top: 1px solid var(--border-subtle);
 }
 

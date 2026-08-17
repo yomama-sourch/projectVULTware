@@ -193,7 +193,6 @@
                     <button class="filter-tab" data-filter="gui">GUI</button>
                     <button class="filter-tab" data-filter="tool">Tools</button>
                     <button class="filter-tab" data-filter="other">Other</button>
-                    <button class="filter-tab" data-filter="users">Users</button>
                     <button class="filter-tab changelog-tab-btn" data-filter="changelog">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                         <span>Changelog</span>
@@ -203,18 +202,6 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" id="search-input" placeholder="Search scripts...">
                 </div>
-            </section>
-
-            <!-- User Directory -->
-            <section class="users-section hidden" id="users-section">
-                <div class="users-section-header">
-                    <div>
-                        <h3>Browse Users</h3>
-                        <p>Search for an account to view their profile and every script they've shared.</p>
-                    </div>
-                </div>
-                <div class="users-grid" id="users-grid"></div>
-                <div class="users-empty hidden" id="users-empty">No users found.</div>
             </section>
 
             <!-- Code Feed -->
@@ -354,13 +341,6 @@
                     </div>
                 </div>
 
-                <!-- Bio -->
-                <div class="settings-group">
-                    <label class="settings-label" for="profile-bio-input">Bio</label>
-                    <p class="settings-hint">Tell other Vultware users a little about yourself. Maximum 300 characters.</p>
-                    <textarea id="profile-bio-input" class="settings-textarea" maxlength="300" rows="4" placeholder="Write something about yourself..."></textarea>
-                </div>
-
                 <!-- Profile Picture -->
                 <div class="settings-group">
                     <label class="settings-label">Profile Picture</label>
@@ -432,7 +412,6 @@
                     <div>
                         <div class="profile-name-row"><h3 id="profile-name">User</h3><span id="profile-role" class="card-author-badge">MEMBER</span></div>
                         <p id="profile-stats" class="profile-stats">0 scripts shared</p>
-                        <p id="profile-bio" class="profile-bio">No bio yet.</p>
                     </div>
                 </div>
                 <button type="button" class="modal-close-btn" id="close-profile-btn" aria-label="Close profile">✕</button>
