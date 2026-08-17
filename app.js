@@ -308,6 +308,7 @@
         bindAuthEvents();
         bindAppEvents();
         bindSettingsEvents();
+        bindChatbotEvents();
 
         // Check for shared database changes every 30 minutes.
         // If nothing changed, the UI is not re-rendered.
