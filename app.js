@@ -693,7 +693,18 @@
     }
 
     // ─── Render Feed ───
+    const changelogSection = $('#changelog-section');
+
     function renderFeed() {
+        if (currentFilter === 'changelog') {
+            codeFeed.classList.add('hidden');
+            if (changelogSection) changelogSection.classList.remove('hidden');
+            return;
+        }
+
+        if (changelogSection) changelogSection.classList.add('hidden');
+        codeFeed.classList.remove('hidden');
+
         const session = getSession();
         let scripts = getScripts();
         const query = searchInput.value.trim().toLowerCase();

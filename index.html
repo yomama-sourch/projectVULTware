@@ -193,6 +193,10 @@
                     <button class="filter-tab" data-filter="gui">GUI</button>
                     <button class="filter-tab" data-filter="tool">Tools</button>
                     <button class="filter-tab" data-filter="other">Other</button>
+                    <button class="filter-tab changelog-tab-btn" data-filter="changelog">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Changelog</span>
+                    </button>
                 </div>
                 <div class="search-box">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -206,6 +210,101 @@
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                     <h3>No scripts shared yet</h3>
                     <p>Be the first to share a Roblox script!</p>
+                </div>
+            </section>
+
+            <!-- Changelog Section -->
+            <section class="changelog-container hidden" id="changelog-section">
+                <div class="changelog-header">
+                    <h2>Platform Changelog</h2>
+                    <p class="changelog-subtitle">Everything added, updated, and enhanced in VultShare</p>
+                </div>
+
+                <div class="changelog-timeline">
+                    <!-- Release 1.5.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag v-latest">v1.5.0</span>
+                            <span class="changelog-date">Latest Release</span>
+                        </div>
+                        <h3>Changelog System & Navigation Polish</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Changelog Tab:</strong> Added dedicated tab and timeline tracking every project update from inception to current release.</li>
+                            <li><strong>Primary Navigation:</strong> Reordered filter tabs with <em>Scripts</em> prioritized as the primary homepage landing view.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Release 1.4.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag">v1.4.0</span>
+                            <span class="changelog-date">Cloud & Public Multi-User</span>
+                        </div>
+                        <h3>Global Hosting & Live Database Sync</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Shared Database Backend:</strong> Added automatic server syncing (<code>database.json</code>) so posts, updates, and registrations sync globally across devices in real time.</li>
+                            <li><strong>One-Click Cloudflare Hosting:</strong> Added <code>host_publicly.bat</code> for instant free public HTTPS domain generation.</li>
+                            <li><strong>One-Click ngrok Support:</strong> Added <code>host_ngrok.bat</code> for developer port tunnels.</li>
+                            <li><strong>Local Node Server:</strong> Created zero-dependency <code>server.js</code> and <code>start_server.bat</code> with directory listing protection.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Release 1.3.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag">v1.3.0</span>
+                            <span class="changelog-date">Customization</span>
+                        </div>
+                        <h3>Appearance Settings & Custom Wallpapers</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Custom Color Engine:</strong> Added 7 instant color presets (Teal, Purple, Pink, Amber, Emerald, Blue, Red) + full RGB custom color picker.</li>
+                            <li><strong>Custom Wallpapers:</strong> Ability to upload PC images as frosted background wallpapers.</li>
+                            <li><strong>Opacity & Blur Sliders:</strong> Granular sliders for background transparency and depth-of-field blur.</li>
+                            <li><strong>Reset Defaults:</strong> One-click button to restore original cyber-teal theme settings.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Release 1.2.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag">v1.2.0</span>
+                            <span class="changelog-date">Management</span>
+                        </div>
+                        <h3>Script Editing & Category Streamlining</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Full Post Editing:</strong> Authors and owners can click the ✏️ Edit button to modify titles, descriptions, categories, code, and thumbnails with instant pre-filling.</li>
+                            <li><strong>Edit Indicators:</strong> Added <code>(edited)</code> status badge to modified scripts.</li>
+                            <li><strong>Category Cleanup:</strong> Removed redundant Snippet and Module tabs in favor of clean Scripts, GUI, Tools, and Other feeds.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Release 1.1.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag">v1.1.0</span>
+                            <span class="changelog-date">Visuals</span>
+                        </div>
+                        <h3>Optional Thumbnails & Image Previews</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Image Uploads:</strong> Added drag-and-drop & file picker for optional script thumbnails.</li>
+                            <li><strong>Cover Placement:</strong> Thumbnails rendered cleanly at the top of script cards with smooth hover zoom effects.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Release 1.0.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag">v1.0.0</span>
+                            <span class="changelog-date">Initial Launch</span>
+                        </div>
+                        <h3>Core Platform & Authentication</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Owner Pre-seeding:</strong> Pre-configured owner account (<code>vult</code>) with full permissions.</li>
+                            <li><strong>User Auth:</strong> Sign up, sign in, password visibility toggles, and session handling.</li>
+                            <li><strong>Lua/Luau Syntax Highlighting:</strong> Prism.js code viewer with copy-to-clipboard and code expanders.</li>
+                            <li><strong>Search & Filter:</strong> Real-time keyword search and responsive dark UI.</li>
+                        </ul>
+                    </div>
                 </div>
             </section>
         </main>
