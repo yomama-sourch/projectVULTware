@@ -254,7 +254,7 @@
         bindSettingsEvents();
 
         // Poll for new scripts from friends every 6s
-        setInterval(fetchServerDB, 6000);
+        setInterval(fetchServerDB, 30 * 60 * 1000);
 
         const session = getSession();
         if (session) {
