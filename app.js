@@ -80,6 +80,8 @@
         };
     }
 
+    let lastDatabaseSnapshot = null;
+
     async function fetchServerDB(showErrors = false) {
         try {
             const [users, scripts] = await Promise.all([
@@ -87,9 +89,18 @@
                 supabaseRequest('scripts?select=*&order=created.desc'),
             ]);
 
-            cacheUsers(users || []);
-            cacheScripts((scripts || []).map(normalizeScript));
-            renderFeed();
+            const normalizedUsers = users || [];
+            const normalizedScripts = (scripts || []).map(normalizeScript);
+            const snapshot = JSON.stringify({ users: normalizedUsers, scripts: normalizedScripts });
+
+            // Keep the 30-minute check completely invisible when nothing changed.
+            // The feed is only re-rendered when the database actually changed.
+            if (snapshot !== lastDatabaseSnapshot) {
+                cacheUsers(normalizedUsers);
+                cacheScripts(normalizedScripts);
+                lastDatabaseSnapshot = snapshot;
+                renderFeed();
+            }
             return true;
         } catch (err) {
             console.error('Vultware database sync failed:', err);
@@ -253,7 +264,8 @@
         bindAppEvents();
         bindSettingsEvents();
 
-        // Poll for new scripts from friends every 6s
+        // Check for shared database changes every 30 minutes.
+        // If nothing changed, the UI is not re-rendered.
         setInterval(fetchServerDB, 30 * 60 * 1000);
 
         const session = getSession();
