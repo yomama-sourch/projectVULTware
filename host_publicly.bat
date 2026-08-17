@@ -2,7 +2,7 @@
 title Vultware Public Host (Cloudflare Tunnel)
 color 0a
 echo ========================================================
-echo         VULTSHARE PUBLIC CLOUDFLARE HOSTING
+echo         VULTWARE PUBLIC CLOUDFLARE HOSTING
 echo ========================================================
 echo.
 echo Starting local web server in the background...

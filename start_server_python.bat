@@ -2,7 +2,7 @@
 title Vultware Server (Python Fallback)
 color 0b
 echo ========================================================
-echo             VULTSHARE PYTHON LOCAL HOST
+echo             VULTWARE PYTHON LOCAL HOST
 echo ========================================================
 echo.
 

@@ -29,6 +29,9 @@
                 username: 'vult',
                 password: 'maybeVult3xternal2000',
                 role: 'owner',
+                profilePicture: null,
+                banned: false,
+                suspendedUntil: null,
                 created: new Date().toISOString(),
             });
             saveUsers(users);
@@ -39,6 +42,27 @@
     function getUsers() {
         try { return JSON.parse(localStorage.getItem(KEYS.USERS)) || []; }
         catch { return []; }
+    }
+    function getUser(username) {
+        return getUsers().find(u => u.username.toLowerCase() === String(username).toLowerCase());
+    }
+
+    function isUserRestricted(user) {
+        if (!user) return false;
+        if (user.banned) return true;
+        if (user.suspendedUntil) {
+            const until = new Date(user.suspendedUntil).getTime();
+            if (until > Date.now()) return true;
+        }
+        return false;
+    }
+
+    function restrictionMessage(user) {
+        if (user?.banned) return 'This account has been permanently banned.';
+        if (user?.suspendedUntil && new Date(user.suspendedUntil).getTime() > Date.now()) {
+            return 'This account is suspended until ' + new Date(user.suspendedUntil).toLocaleString() + '.';
+        }
+        return '';
     }
     function saveUsers(u) { 
         localStorage.setItem(KEYS.USERS, JSON.stringify(u));
@@ -77,7 +101,16 @@
                 if (data.scripts && Array.isArray(data.scripts)) {
                     localStorage.setItem(KEYS.SCRIPTS, JSON.stringify(data.scripts));
                 }
+                const session = getSession();
+                const serverUser = session ? data.users?.find(u => u.username.toLowerCase() === session.username.toLowerCase()) : null;
+                if (session && isUserRestricted(serverUser)) {
+                    clearSession();
+                    showAuth();
+                    loginError.textContent = restrictionMessage(serverUser);
+                }
                 renderFeed();
+                syncProfilePictureUI();
+                if (activeProfileUsername && profileModal && !profileModal.classList.contains('hidden')) openProfile(activeProfileUsername);
             }
         } catch {}
     }
@@ -121,6 +154,25 @@
     const userBadge = $('#user-badge');
     const logoutBtn = $('#logout-btn');
     const settingsBtn = $('#settings-btn');
+    const profilePictureInput = $('#profile-picture-input');
+    const profilePicturePreview = $('#profile-picture-preview');
+    const removeProfilePictureBtn = $('#remove-profile-picture-btn');
+
+    // Profile & moderation modal
+    const profileModal = $('#profile-modal');
+    const closeProfileBtn = $('#close-profile-btn');
+    const profileAvatar = $('#profile-avatar');
+    const profileName = $('#profile-name');
+    const profileRole = $('#profile-role');
+    const profileStats = $('#profile-stats');
+    const profileScripts = $('#profile-scripts');
+    const profileEmpty = $('#profile-empty');
+    const profileModeration = $('#profile-moderation');
+    const banUserBtn = $('#ban-user-btn');
+    const unbanUserBtn = $('#unban-user-btn');
+    const suspendUserBtn = $('#suspend-user-btn');
+    const unsuspendUserBtn = $('#unsuspend-user-btn');
+    const suspendDaysInput = $('#suspend-days-input');
 
     // Post Form
     const newPostToggle = $('#new-post-toggle');
@@ -174,6 +226,7 @@
     let pendingDeleteId = null;
     let currentThumbnailBase64 = null;
     let activeSettings = getSettings();
+    let activeProfileUsername = null;
 
     // ─── Init ───
     function init() {
@@ -272,6 +325,13 @@
     }
 
     function showApp(session) {
+        const currentUser = getUser(session.username);
+        if (isUserRestricted(currentUser)) {
+            clearSession();
+            showAuth();
+            loginError.textContent = restrictionMessage(currentUser);
+            return;
+        }
         authContainer.classList.add('hidden');
         appContainer.classList.remove('hidden');
 
@@ -380,6 +440,12 @@
                 return;
             }
 
+            if (isUserRestricted(user)) {
+                loginError.textContent = restrictionMessage(user);
+                shakeElement(loginForm);
+                return;
+            }
+
             loginError.textContent = '';
             const session = { username: user.username, role: user.role };
             setSession(session);
@@ -422,6 +488,9 @@
                 username,
                 password,
                 role: 'member',
+                profilePicture: null,
+                banned: false,
+                suspendedUntil: null,
                 created: new Date().toISOString(),
             });
             saveUsers(users);
@@ -450,6 +519,7 @@
             applySettings(activeSettings);
             settingsModal.classList.remove('hidden');
         });
+        syncProfilePictureUI();
 
         // Close Settings Modal
         closeSettingsBtn.addEventListener('click', () => {
@@ -539,6 +609,29 @@
 
     // ─── App Events ───
     function bindAppEvents() {
+        userAvatar.addEventListener('click', () => openProfile(getSession()?.username));
+        userDisplayName.addEventListener('click', () => openProfile(getSession()?.username));
+        if (closeProfileBtn) closeProfileBtn.addEventListener('click', closeProfile);
+        if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfile(); });
+
+        // Profile picture upload
+        if (profilePictureInput) {
+            profilePictureInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) { toast('Please select an image.', 'error'); return; }
+                if (file.size > 1024 * 1024) { toast('Profile picture must be 1MB or smaller.', 'error'); return; }
+                const reader = new FileReader();
+                reader.onload = evt => updateOwnProfilePicture(evt.target.result);
+                reader.readAsDataURL(file);
+            });
+        }
+        if (removeProfilePictureBtn) removeProfilePictureBtn.addEventListener('click', () => updateOwnProfilePicture(null));
+
+        if (banUserBtn) banUserBtn.addEventListener('click', () => moderateUser('ban'));
+        if (unbanUserBtn) unbanUserBtn.addEventListener('click', () => moderateUser('unban'));
+        if (suspendUserBtn) suspendUserBtn.addEventListener('click', () => moderateUser('suspend'));
+        if (unsuspendUserBtn) unsuspendUserBtn.addEventListener('click', () => moderateUser('unsuspend'));
         logoutBtn.addEventListener('click', () => {
             clearSession();
             showAuth();
@@ -772,7 +865,7 @@
                     </div>
                     ${script.description ? `<p class="card-description">${escapeHtml(script.description)}</p>` : ''}
                     <div class="card-author-row">
-                        <span class="card-author">${escapeHtml(script.author)}</span>
+                        <button class="card-author profile-link" type="button" data-author="${escapeHtml(script.author)}">${escapeHtml(script.author)}</button>
                         ${authorBadge}
                         <span>·</span>
                         <span>${timeAgo}</span>
@@ -797,6 +890,9 @@
                 ${collapsed ? `<button class="code-expand-btn">Show full code ↓</button>` : ''}
             </div>
         `;
+
+        const authorBtn = card.querySelector('.profile-link');
+        if (authorBtn) authorBtn.addEventListener('click', () => openProfile(script.author));
 
         // Copy button
         card.querySelector('.copy-btn').addEventListener('click', () => {
@@ -843,6 +939,96 @@
         }
 
         return card;
+    }
+
+    // ─── Profiles & Owner Moderation ───
+    function avatarMarkup(user, sizeClass = '') {
+        if (user?.profilePicture) {
+            return `<img class="profile-avatar-img ${sizeClass}" src="${user.profilePicture}" alt="${escapeHtml(user.username)} profile picture">`;
+        }
+        return `<div class="profile-avatar-fallback ${sizeClass}">${escapeHtml((user?.username || '?').charAt(0).toUpperCase())}</div>`;
+    }
+
+    function openProfile(username) {
+        if (!username || !profileModal) return;
+        const user = getUser(username);
+        if (!user) return;
+        activeProfileUsername = user.username;
+        const scripts = getScripts().filter(s => s.author.toLowerCase() === user.username.toLowerCase());
+        profileAvatar.innerHTML = avatarMarkup(user);
+        profileName.textContent = user.username;
+        profileRole.textContent = user.role === 'owner' ? 'OWNER' : 'MEMBER';
+        profileStats.textContent = `${scripts.length} script${scripts.length === 1 ? '' : 's'} shared`;
+
+        profileScripts.innerHTML = '';
+        profileEmpty.classList.toggle('hidden', scripts.length !== 0);
+        scripts.forEach((script, idx) => profileScripts.appendChild(createScriptCard(script, getSession(), idx)));
+        if (window.Prism) Prism.highlightAllUnder(profileScripts);
+
+        const isOwner = getSession()?.role === 'owner' && user.role !== 'owner';
+        profileModeration.classList.toggle('hidden', !isOwner);
+        if (isOwner) {
+            const banned = !!user.banned;
+            const suspended = !!user.suspendedUntil && new Date(user.suspendedUntil).getTime() > Date.now();
+            banUserBtn.classList.toggle('hidden', banned);
+            unbanUserBtn.classList.toggle('hidden', !banned);
+            suspendUserBtn.classList.toggle('hidden', suspended);
+            unsuspendUserBtn.classList.toggle('hidden', !suspended);
+        }
+        profileModal.classList.remove('hidden');
+    }
+
+    function closeProfile() {
+        activeProfileUsername = null;
+        if (profileModal) profileModal.classList.add('hidden');
+    }
+
+    function updateOwnProfilePicture(profilePicture) {
+        const session = getSession();
+        if (!session) return;
+        const users = getUsers();
+        const idx = users.findIndex(u => u.username.toLowerCase() === session.username.toLowerCase());
+        if (idx === -1) return;
+        users[idx].profilePicture = profilePicture;
+        saveUsers(users);
+        syncProfilePictureUI();
+        if (activeProfileUsername) openProfile(activeProfileUsername);
+        toast(profilePicture ? 'Profile picture updated!' : 'Profile picture removed.', 'success');
+    }
+
+    function syncProfilePictureUI() {
+        const session = getSession();
+        const user = session ? getUser(session.username) : null;
+        if (!user) return;
+        userAvatar.innerHTML = avatarMarkup(user);
+        if (profilePicturePreview) {
+            profilePicturePreview.innerHTML = user.profilePicture ? `<img src="${user.profilePicture}" alt="Profile picture preview">` : avatarMarkup(user);
+        }
+    }
+
+    async function moderateUser(action) {
+        const session = getSession();
+        if (!session || session.role !== 'owner' || !activeProfileUsername || activeProfileUsername.toLowerCase() === 'vult') return;
+        const target = getUser(activeProfileUsername);
+        if (!target) return;
+        let suspendedUntil = null;
+        if (action === 'suspend') {
+            const days = Math.max(1, Math.min(3650, parseInt(suspendDaysInput.value, 10) || 1));
+            suspendedUntil = new Date(Date.now() + days * 86400000).toISOString();
+        }
+        try {
+            const res = await fetch('/api/moderation', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ actor: session.username, action, target: target.username, suspendedUntil })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Moderation failed');
+            await fetchServerDB();
+            openProfile(target.username);
+            toast(action === 'ban' ? 'User permanently banned.' : action === 'suspend' ? 'User suspended.' : 'User restriction removed.', 'success');
+        } catch (err) {
+            toast(err.message || 'Moderation failed.', 'error');
+        }
     }
 
     // ─── Utils ───
