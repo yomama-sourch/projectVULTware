@@ -21,13 +21,6 @@
         wallpaperBlur: 8,
     };
 
-    const AI_DEFAULTS = {
-        provider: 'cerebras',
-        model: 'llama-3.3-70b',
-        endpoint: 'https://api.cerebras.ai/v1/chat/completions',
-        apiKey: '',
-    };
-
     // ─── Supabase configuration ───
     // The publishable/anon key is safe for browser use when RLS policies are enabled.
     const SUPABASE_URL = 'https://lflodtjmpenkflacrgzw.supabase.co';
@@ -247,22 +240,6 @@
     const wallpaperBlurSlider = $('#wallpaper-blur-slider');
     const wallpaperBlurVal = $('#wallpaper-blur-val');
 
-    // AI Chatbot
-    const chatbotSection = $('#chatbot-section');
-    const chatbotSettings = $('#chatbot-settings');
-    const chatbotSettingsToggle = $('#chatbot-settings-toggle');
-    const aiProvider = $('#ai-provider');
-    const aiModel = $('#ai-model');
-    const aiApiKey = $('#ai-api-key');
-    const aiEndpoint = $('#ai-endpoint');
-    const customEndpointWrap = $('#custom-endpoint-wrap');
-    const saveAiSettingsBtn = $('#save-ai-settings');
-    const chatMessages = $('#chat-messages');
-    const chatEmpty = $('#chat-empty');
-    const chatForm = $('#chat-form');
-    const chatInput = $('#chat-input');
-    const chatSendBtn = $('#chat-send-btn');
-
     // Feed & Filter
     const codeFeed = $('#code-feed');
     const emptyState = $('#empty-state');
@@ -278,28 +255,6 @@
     let pendingDeleteId = null;
     let currentThumbnailBase64 = null;
     let activeSettings = getSettings();
-    let chatHistory = [];
-
-    function getAISettings() {
-        try {
-            return Object.assign({}, AI_DEFAULTS, JSON.parse(localStorage.getItem('vultware_ai_settings')) || {});
-        } catch {
-            return Object.assign({}, AI_DEFAULTS);
-        }
-    }
-
-    function saveAISettings(settings) {
-        localStorage.setItem('vultware_ai_settings', JSON.stringify(settings));
-    }
-
-    function applyAISettings() {
-        const settings = getAISettings();
-        aiProvider.value = settings.provider || 'cerebras';
-        aiModel.value = settings.model || AI_DEFAULTS.model;
-        aiApiKey.value = settings.apiKey || '';
-        aiEndpoint.value = settings.endpoint || AI_DEFAULTS.endpoint;
-        customEndpointWrap.classList.toggle('hidden', aiProvider.value !== 'custom');
-    }
 
     // ─── Init ───
     async function init() {
@@ -308,7 +263,6 @@
         bindAuthEvents();
         bindAppEvents();
         bindSettingsEvents();
-        bindChatbotEvents();
 
         // Check for shared database changes every 30 minutes.
         // If nothing changed, the UI is not re-rendered.
@@ -842,148 +796,10 @@
         });
     }
 
-    // ─── AI Chatbot ───
-    function bindChatbotEvents() {
-        chatbotSettingsToggle.addEventListener('click', () => {
-            applyAISettings();
-            chatbotSettings.classList.toggle('hidden');
-        });
-
-        aiProvider.addEventListener('change', () => {
-            customEndpointWrap.classList.toggle('hidden', aiProvider.value !== 'custom');
-            if (aiProvider.value === 'cerebras') {
-                aiEndpoint.value = AI_DEFAULTS.endpoint;
-                if (!aiModel.value || aiModel.value === 'gpt-4o-mini') aiModel.value = AI_DEFAULTS.model;
-            }
-        });
-
-        saveAiSettingsBtn.addEventListener('click', () => {
-            const settings = {
-                provider: aiProvider.value,
-                model: aiModel.value.trim() || AI_DEFAULTS.model,
-                apiKey: aiApiKey.value.trim(),
-                endpoint: aiProvider.value === 'cerebras'
-                    ? AI_DEFAULTS.endpoint
-                    : aiEndpoint.value.trim(),
-            };
-
-            if (!settings.apiKey) {
-                toast('Add an API key first.', 'error');
-                chatbotSettings.classList.remove('hidden');
-                aiApiKey.focus();
-                return;
-            }
-            if (settings.provider === 'custom' && !settings.endpoint) {
-                toast('Add your API endpoint.', 'error');
-                aiEndpoint.focus();
-                return;
-            }
-
-            saveAISettings(settings);
-            toast('AI settings saved.', 'success');
-            chatbotSettings.classList.add('hidden');
-        });
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = chatInput.value.trim();
-            if (!text || chatSendBtn.disabled) return;
-
-            const settings = getAISettings();
-            if (!settings.apiKey) {
-                chatbotSettings.classList.remove('hidden');
-                aiApiKey.focus();
-                toast('Add your AI API key to use the chatbot.', 'error');
-                return;
-            }
-
-            appendChatMessage('user', text);
-            chatHistory.push({ role: 'user', content: text });
-            chatInput.value = '';
-            chatSendBtn.disabled = true;
-            chatSendBtn.textContent = '...';
-
-            const typing = appendChatMessage('assistant', 'Thinking…');
-            try {
-                const endpoint = settings.provider === 'cerebras'
-                    ? AI_DEFAULTS.endpoint
-                    : settings.endpoint;
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${settings.apiKey}`,
-                    },
-                    body: JSON.stringify({
-                        model: settings.model,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'You are Vultware AI, a helpful assistant for Roblox developers. Help with Luau scripting, debugging, UI, game development, and general programming. Be concise but useful.',
-                            },
-                            ...chatHistory,
-                        ],
-                    }),
-                });
-
-                if (!response.ok) {
-                    let message = `AI request failed (${response.status})`;
-                    try {
-                        const error = await response.json();
-                        message = error.error?.message || error.message || message;
-                    } catch {}
-                    throw new Error(message);
-                }
-
-                const data = await response.json();
-                const reply = data.choices?.[0]?.message?.content?.trim();
-                if (!reply) throw new Error('The AI returned an empty response.');
-
-                typing.textContent = reply;
-                chatHistory.push({ role: 'assistant', content: reply });
-            } catch (err) {
-                typing.remove();
-                appendChatMessage('assistant', `Unable to reach the AI: ${err.message}\n\nIf you are using Cerebras, make sure your API key is valid and that your browser/network allows requests to the API.`);
-            } finally {
-                chatSendBtn.disabled = false;
-                chatSendBtn.textContent = 'Send';
-                chatInput.focus();
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        });
-    }
-
-    function appendChatMessage(role, text) {
-        if (chatEmpty) chatEmpty.classList.add('hidden');
-        const el = document.createElement('div');
-        el.className = `chat-message ${role}`;
-        const label = document.createElement('span');
-        label.className = 'chat-message-label';
-        label.textContent = role === 'user' ? 'You' : 'Vultware AI';
-        el.appendChild(label);
-        const body = document.createElement('span');
-        body.textContent = text;
-        el.appendChild(body);
-        chatMessages.appendChild(el);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return body;
-    }
-
     // ─── Render Feed ───
     const changelogSection = $('#changelog-section');
 
     function renderFeed() {
-        if (currentFilter === 'chatbot') {
-            codeFeed.classList.add('hidden');
-            if (changelogSection) changelogSection.classList.add('hidden');
-            chatbotSection.classList.remove('hidden');
-            searchInput.parentElement.classList.add('hidden');
-            return;
-        }
-
-        chatbotSection.classList.add('hidden');
-        searchInput.parentElement.classList.remove('hidden');
-
         if (currentFilter === 'changelog') {
             codeFeed.classList.add('hidden');
             if (changelogSection) changelogSection.classList.remove('hidden');
