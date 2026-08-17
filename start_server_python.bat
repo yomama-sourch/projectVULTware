@@ -1,8 +1,8 @@
 @echo off
-title Vultware Server (Python Fallback)
+title VultShare Server (Python Fallback)
 color 0b
 echo ========================================================
-echo             VULTWARE PYTHON LOCAL HOST
+echo             VULTSHARE PYTHON LOCAL HOST
 echo ========================================================
 echo.
 

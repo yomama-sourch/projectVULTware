@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vultware — Roblox Code Sharing</title>
+    <title>VultShare — Roblox Code Sharing</title>
     <meta name="description" content="Share and discover Roblox Luau scripts with the community. Modern code sharing platform for Roblox developers.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,7 @@
                         <circle cx="20" cy="20" r="3" fill="currentColor"/>
                     </svg>
                 </div>
-                <h1>Vultware</h1>
+                <h1>VultShare</h1>
                 <p class="auth-subtitle">Share Roblox scripts with the community</p>
             </div>
 
@@ -97,7 +97,7 @@
                             <circle cx="20" cy="20" r="3" fill="currentColor"/>
                         </svg>
                     </div>
-                    <span class="brand-name">Vultware</span>
+                    <span class="brand-name">VultShare</span>
                 </div>
                 <div class="header-actions">
                     <div class="user-info">
@@ -217,7 +217,7 @@
             <section class="changelog-container hidden" id="changelog-section">
                 <div class="changelog-header">
                     <h2>Platform Changelog</h2>
-                    <p class="changelog-subtitle">Everything added, updated, and enhanced in Vultware</p>
+                    <p class="changelog-subtitle">Everything added, updated, and enhanced in VultShare</p>
                 </div>
 
                 <div class="changelog-timeline">
@@ -341,20 +341,6 @@
                     </div>
                 </div>
 
-                <!-- Profile Picture -->
-                <div class="settings-group">
-                    <label class="settings-label">Profile Picture</label>
-                    <p class="settings-hint">Choose an image that appears beside your account and on your profile.</p>
-                    <div class="profile-picture-setting">
-                        <div id="profile-picture-preview" class="profile-picture-preview"></div>
-                        <div class="profile-picture-actions">
-                            <input type="file" id="profile-picture-input" accept="image/*" class="wallpaper-file-input">
-                            <label for="profile-picture-input" class="btn-ghost">Choose Image</label>
-                            <button type="button" class="btn-danger" id="remove-profile-picture-btn">Remove</button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Wallpaper Background -->
                 <div class="settings-group">
                     <label class="settings-label">Custom Background Wallpaper</label>
@@ -399,37 +385,6 @@
                     Reset Defaults
                 </button>
                 <button type="button" class="btn-primary" id="save-settings-btn">Done</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Modal -->
-    <div id="profile-modal" class="modal-overlay hidden">
-        <div class="modal-card profile-modal-card">
-            <div class="profile-modal-header">
-                <div class="profile-hero">
-                    <div id="profile-avatar" class="profile-avatar-large"></div>
-                    <div>
-                        <div class="profile-name-row"><h3 id="profile-name">User</h3><span id="profile-role" class="card-author-badge">MEMBER</span></div>
-                        <p id="profile-stats" class="profile-stats">0 scripts shared</p>
-                    </div>
-                </div>
-                <button type="button" class="modal-close-btn" id="close-profile-btn" aria-label="Close profile">✕</button>
-            </div>
-            <div id="profile-moderation" class="profile-moderation hidden">
-                <div class="moderation-title">Owner Moderation</div>
-                <div class="moderation-row">
-                    <button type="button" class="btn-danger" id="ban-user-btn">Ban</button>
-                    <button type="button" class="btn-ghost hidden" id="unban-user-btn">Unban</button>
-                    <input id="suspend-days-input" type="number" min="1" max="3650" value="7" aria-label="Suspension days">
-                    <button type="button" class="btn-danger" id="suspend-user-btn">Suspend</button>
-                    <button type="button" class="btn-ghost hidden" id="unsuspend-user-btn">Unsuspend</button>
-                </div>
-            </div>
-            <div class="profile-script-section">
-                <h4>Scripts by this user</h4>
-                <div id="profile-scripts" class="profile-scripts"></div>
-                <div id="profile-empty" class="profile-empty hidden">This user hasn't shared any scripts yet.</div>
             </div>
         </div>
     </div>

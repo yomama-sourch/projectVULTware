@@ -1,8 +1,8 @@
 @echo off
-title Vultware Public Host (Cloudflare Tunnel)
+title VultShare Public Host (Cloudflare Tunnel)
 color 0a
 echo ========================================================
-echo         VULTWARE PUBLIC CLOUDFLARE HOSTING
+echo         VULTSHARE PUBLIC CLOUDFLARE HOSTING
 echo ========================================================
 echo.
 echo Starting local web server in the background...

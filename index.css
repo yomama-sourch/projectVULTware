@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   Vultware — Design System & Styles
+   VultShare — Design System & Styles
    A dark, modern code-sharing UI for Roblox scripts
    ══════════════════════════════════════════════════════ */
 
@@ -1421,47 +1421,3 @@ body {
         display: none;
     }
 }
-
-
-/* ─── Profiles & Moderation ─── */
-.profile-link {
-    border: 0;
-    background: transparent;
-    padding: 0;
-    color: var(--accent);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 600;
-}
-.profile-link:hover { text-decoration: underline; }
-.user-avatar, .user-name { cursor: pointer; }
-.user-avatar { overflow: hidden; }
-.profile-avatar-img, .profile-avatar-fallback {
-    width: 100%; height: 100%; display: block; object-fit: cover;
-}
-.profile-avatar-fallback {
-    display: flex; align-items: center; justify-content: center;
-    background: var(--bg-overlay); color: var(--accent); font-weight: 800;
-}
-.profile-picture-setting { display:flex; align-items:center; gap:16px; }
-.profile-picture-preview { width:64px; height:64px; border-radius:50%; overflow:hidden; border:2px solid var(--border); flex:0 0 auto; }
-.profile-picture-preview .profile-avatar-fallback { font-size:1.2rem; }
-.profile-picture-preview img { width:100%; height:100%; object-fit:cover; }
-.profile-picture-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-.profile-picture-actions .btn-ghost { text-decoration:none; }
-.profile-modal-card { max-width: 760px; max-height: 88vh; overflow:auto; }
-.profile-modal-header { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; margin-bottom:20px; }
-.profile-hero { display:flex; align-items:center; gap:16px; }
-.profile-avatar-large { width:76px; height:76px; border-radius:50%; overflow:hidden; border:2px solid var(--border); flex:0 0 auto; }
-.profile-avatar-large .profile-avatar-img, .profile-avatar-large .profile-avatar-fallback { width:100%; height:100%; }
-.profile-avatar-large .profile-avatar-fallback { font-size:1.7rem; }
-.profile-name-row { display:flex; align-items:center; gap:9px; }
-.profile-name-row h3 { margin:0; }
-.profile-stats { margin:3px 0 0 !important; }
-.profile-moderation { border:1px solid var(--border); background:var(--bg-elevated); border-radius:var(--radius-md); padding:14px; margin-bottom:20px; }
-.moderation-title { font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); font-weight:800; margin-bottom:10px; }
-.moderation-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.moderation-row input { width:90px; padding:9px 10px; background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border); border-radius:var(--radius-md); }
-.profile-script-section h4 { margin-bottom:12px; font-size:.95rem; }
-.profile-scripts { display:flex; flex-direction:column; gap:14px; }
-.profile-empty { color:var(--text-secondary); padding:24px; text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md); }
