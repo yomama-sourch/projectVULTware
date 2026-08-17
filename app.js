@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   VultShare — App Logic
+   Vultware — App Logic
    Auth, CRUD, Settings (Color/Wallpaper/Opacity/Reset)
    ══════════════════════════════════════════════════════ */
 
@@ -8,10 +8,10 @@
 
     // ─── Storage Keys ───
     const KEYS = {
-        USERS: 'vultshare_users',
-        SCRIPTS: 'vultshare_scripts',
-        SESSION: 'vultshare_session',
-        SETTINGS: 'vultshare_settings',
+        USERS: 'vultware_users',
+        SCRIPTS: 'vultware_scripts',
+        SESSION: 'vultware_session',
+        SETTINGS: 'vultware_settings',
     };
 
     const DEFAULT_SETTINGS = {
@@ -21,65 +21,135 @@
         wallpaperBlur: 8,
     };
 
-    // ─── Seed Owner ───
-    function seedOwner() {
-        const users = getUsers();
-        if (!users.find(u => u.username === 'vult')) {
-            users.push({
-                username: 'vult',
-                password: 'maybeVult3xternal2000',
-                role: 'owner',
-                created: new Date().toISOString(),
-            });
-            saveUsers(users);
+    // ─── Supabase configuration ───
+    // The publishable/anon key is safe for browser use when RLS policies are enabled.
+    const SUPABASE_URL = 'https://lflodtjmpenkflacrgzw.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmbG9kdGptcGVua2ZsYWNyZ3p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjYwNjAsImV4cCI6MjEwMjU0MjA2MH0.TRLqdSaCNMjOVOXnYtkXAtrEAYY6sXqJP6H7QpCNfmY';
+
+    const SUPABASE_HEADERS = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+    };
+
+    async function supabaseRequest(path, options = {}) {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+            ...options,
+            headers: { ...SUPABASE_HEADERS, ...(options.headers || {}) },
+        });
+
+        if (!response.ok) {
+            let message = `Supabase request failed (${response.status})`;
+            try {
+                const error = await response.json();
+                message = error.message || error.error_description || error.hint || message;
+            } catch {}
+            throw new Error(message);
         }
+
+        if (response.status === 204) return null;
+        const text = await response.text();
+        return text ? JSON.parse(text) : null;
     }
 
-    // ─── Shared Database API & LocalStorage helpers ───
+    // ─── Local cache helpers ───
+    // localStorage is only a cache now. Supabase is the source of truth.
     function getUsers() {
         try { return JSON.parse(localStorage.getItem(KEYS.USERS)) || []; }
         catch { return []; }
-    }
-    function saveUsers(u) { 
-        localStorage.setItem(KEYS.USERS, JSON.stringify(u));
-        syncWithServer();
     }
 
     function getScripts() {
         try { return JSON.parse(localStorage.getItem(KEYS.SCRIPTS)) || []; }
         catch { return []; }
     }
-    function saveScripts(s) { 
-        localStorage.setItem(KEYS.SCRIPTS, JSON.stringify(s));
-        syncWithServer();
+
+    function cacheUsers(users) {
+        localStorage.setItem(KEYS.USERS, JSON.stringify(users || []));
     }
 
-    function syncWithServer() {
-        const payload = {
-            users: getUsers(),
-            scripts: getScripts()
+    function cacheScripts(scripts) {
+        localStorage.setItem(KEYS.SCRIPTS, JSON.stringify(scripts || []));
+    }
+
+    function normalizeScript(script) {
+        if (!script) return script;
+        return {
+            ...script,
+            authorRole: script.authorRole ?? script.author_role ?? 'member',
         };
-        fetch('/api/db', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).catch(() => {});
     }
 
-    async function fetchServerDB() {
+    async function fetchServerDB(showErrors = false) {
         try {
-            const res = await fetch('/api/db');
-            if (res.ok) {
-                const data = await res.json();
-                if (data.users && Array.isArray(data.users)) {
-                    localStorage.setItem(KEYS.USERS, JSON.stringify(data.users));
-                }
-                if (data.scripts && Array.isArray(data.scripts)) {
-                    localStorage.setItem(KEYS.SCRIPTS, JSON.stringify(data.scripts));
-                }
-                renderFeed();
-            }
-        } catch {}
+            const [users, scripts] = await Promise.all([
+                supabaseRequest('users?select=*&order=created.asc'),
+                supabaseRequest('scripts?select=*&order=created.desc'),
+            ]);
+
+            cacheUsers(users || []);
+            cacheScripts((scripts || []).map(normalizeScript));
+            renderFeed();
+            return true;
+        } catch (err) {
+            console.error('Vultware database sync failed:', err);
+            if (showErrors) toast('Could not connect to the shared database.', 'error');
+            return false;
+        }
+    }
+
+    async function createUser(user) {
+        const rows = await supabaseRequest('users', {
+            method: 'POST',
+            headers: { 'Prefer': 'return=representation' },
+            body: JSON.stringify(user),
+        });
+        cacheUsers([...getUsers(), ...(rows || [user])]);
+        return rows?.[0] || user;
+    }
+
+    async function createScript(script) {
+        const row = {
+            id: script.id,
+            title: script.title,
+            description: script.description || '',
+            category: script.category,
+            code: script.code,
+            author: script.author,
+            author_role: script.authorRole || 'member',
+            thumbnail: script.thumbnail || null,
+            created: script.created,
+            updated: script.updated || null,
+        };
+        const rows = await supabaseRequest('scripts', {
+            method: 'POST',
+            headers: { 'Prefer': 'return=representation' },
+            body: JSON.stringify(row),
+        });
+        return normalizeScript(rows?.[0] || script);
+    }
+
+    async function updateScript(script) {
+        const row = {
+            title: script.title,
+            description: script.description || '',
+            category: script.category,
+            code: script.code,
+            thumbnail: script.thumbnail || null,
+            updated: script.updated || new Date().toISOString(),
+        };
+        const rows = await supabaseRequest(`scripts?id=eq.${encodeURIComponent(script.id)}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=representation' },
+            body: JSON.stringify(row),
+        });
+        return normalizeScript(rows?.[0] || script);
+    }
+
+    async function deleteScript(id) {
+        await supabaseRequest(`scripts?id=eq.${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+        });
     }
 
     function getSession() {
@@ -176,9 +246,8 @@
     let activeSettings = getSettings();
 
     // ─── Init ───
-    function init() {
-        seedOwner();
-        fetchServerDB();
+    async function init() {
+        await fetchServerDB(true);
         applySettings(activeSettings);
         bindAuthEvents();
         bindAppEvents();
@@ -366,11 +435,12 @@
             signupError.textContent = '';
         });
 
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = $('#login-username').value.trim();
             const password = $('#login-password').value;
 
+            await fetchServerDB(true);
             const users = getUsers();
             const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
@@ -387,7 +457,7 @@
             toast('Welcome back, ' + user.username + '!', 'success');
         });
 
-        signupForm.addEventListener('submit', (e) => {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = $('#signup-username').value.trim();
             const password = $('#signup-password').value;
@@ -411,6 +481,7 @@
                 return;
             }
 
+            await fetchServerDB(true);
             const users = getUsers();
             if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
                 signupError.textContent = 'Username already taken.';
@@ -418,13 +489,20 @@
                 return;
             }
 
-            users.push({
-                username,
-                password,
-                role: 'member',
-                created: new Date().toISOString(),
-            });
-            saveUsers(users);
+            try {
+                await createUser({
+                    username,
+                    password,
+                    role: 'member',
+                    created: new Date().toISOString(),
+                });
+            } catch (err) {
+                signupError.textContent = err.message.includes('duplicate') || err.message.includes('unique')
+                    ? 'Username already taken.'
+                    : 'Could not create account. Please try again.';
+                shakeElement(signupForm);
+                return;
+            }
 
             signupError.textContent = '';
             const session = { username, role: 'member' };
@@ -588,7 +666,7 @@
         });
 
         // Post Form Submit (New or Edit)
-        postForm.addEventListener('submit', (e) => {
+        postForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const session = getSession();
             if (!session) return;
@@ -601,47 +679,56 @@
 
             if (!title || !code) return;
 
-            const scripts = getScripts();
+            try {
+                if (editId) {
+                    // UPDATE existing post directly in Supabase.
+                    const scripts = getScripts();
+                    const existing = scripts.find(s => s.id === editId);
+                    if (!existing) throw new Error('Script not found. Refresh and try again.');
 
-            if (editId) {
-                // UPDATE existing post
-                const idx = scripts.findIndex(s => s.id === editId);
-                if (idx !== -1) {
-                    scripts[idx].title = title;
-                    scripts[idx].description = description;
-                    scripts[idx].category = category;
-                    scripts[idx].code = code;
-                    scripts[idx].updated = new Date().toISOString();
+                    const updatedScript = {
+                        ...existing,
+                        title,
+                        description,
+                        category,
+                        code,
+                        updated: new Date().toISOString(),
+                    };
 
                     if (currentThumbnailBase64) {
-                        scripts[idx].thumbnail = currentThumbnailBase64;
+                        updatedScript.thumbnail = currentThumbnailBase64;
                     } else {
-                        delete scripts[idx].thumbnail;
+                        updatedScript.thumbnail = null;
                     }
 
-                    saveScripts(scripts);
+                    const saved = await updateScript(updatedScript);
+                    cacheScripts(getScripts().map(s => s.id === saved.id ? saved : s));
                     toast('Script updated successfully!', 'success');
-                }
-            } else {
-                // CREATE new post
-                const newScript = {
-                    id: generateId(),
-                    title,
-                    description,
-                    category,
-                    code,
-                    author: session.username,
-                    authorRole: session.role,
-                    created: new Date().toISOString(),
-                };
+                } else {
+                    // CREATE a new post directly in Supabase.
+                    const newScript = {
+                        id: generateId(),
+                        title,
+                        description,
+                        category,
+                        code,
+                        author: session.username,
+                        authorRole: session.role,
+                        created: new Date().toISOString(),
+                    };
 
-                if (currentThumbnailBase64) {
-                    newScript.thumbnail = currentThumbnailBase64;
-                }
+                    if (currentThumbnailBase64) {
+                        newScript.thumbnail = currentThumbnailBase64;
+                    }
 
-                scripts.unshift(newScript);
-                saveScripts(scripts);
-                toast('Script shared!', 'success');
+                    const saved = await createScript(newScript);
+                    cacheScripts([saved, ...getScripts().filter(s => s.id !== saved.id)]);
+                    toast('Script shared!', 'success');
+                }
+            } catch (err) {
+                console.error(err);
+                toast(err.message || 'Could not save script.', 'error');
+                return;
             }
 
             resetPostForm();
@@ -673,15 +760,20 @@
             pendingDeleteId = null;
         });
 
-        confirmDeleteBtn.addEventListener('click', () => {
+        confirmDeleteBtn.addEventListener('click', async () => {
             if (!pendingDeleteId) return;
-            let scripts = getScripts();
-            scripts = scripts.filter(s => s.id !== pendingDeleteId);
-            saveScripts(scripts);
-            deleteModal.classList.add('hidden');
-            pendingDeleteId = null;
-            renderFeed();
-            toast('Script deleted.', 'success');
+            try {
+                const deletedId = pendingDeleteId;
+                await deleteScript(deletedId);
+                cacheScripts(getScripts().filter(s => s.id !== deletedId));
+                deleteModal.classList.add('hidden');
+                pendingDeleteId = null;
+                renderFeed();
+                toast('Script deleted.', 'success');
+            } catch (err) {
+                console.error(err);
+                toast(err.message || 'Could not delete script.', 'error');
+            }
         });
 
         deleteModal.addEventListener('click', (e) => {
