@@ -213,6 +213,7 @@
     const wallpaperBlurSlider = $('#wallpaper-blur-slider');
     const wallpaperBlurVal = $('#wallpaper-blur-val');
     const bioInput = $('#profile-bio-input');
+    const bioCharacterCount = $('#bio-character-count');
 
     // Feed & Filter
     const codeFeed = $('#code-feed');
@@ -631,6 +632,7 @@
         if (bioInput) {
             bioInput.addEventListener('input', () => {
                 if (bioInput.value.length > 300) bioInput.value = bioInput.value.slice(0, 300);
+                if (bioCharacterCount) bioCharacterCount.textContent = bioInput.value.length;
             });
         }
 
@@ -1061,6 +1063,7 @@
         const session = getSession();
         const user = session ? getUser(session.username) : null;
         if (bioInput) bioInput.value = user?.bio || '';
+        if (bioCharacterCount) bioCharacterCount.textContent = bioInput ? bioInput.value.length : 0;
     }
 
     function updateOwnProfilePicture(profilePicture) {

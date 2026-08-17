@@ -1067,10 +1067,10 @@ body {
 
 /* ─── Settings Modal ─── */
 .settings-modal-card {
-    max-width: 980px;
-    width: min(94vw, 980px);
-    max-height: 82vh;
-    padding: 24px 30px;
+    max-width: 1100px;
+    width: min(94vw, 1100px);
+    max-height: 76vh;
+    padding: 20px 28px;
     overflow-y: auto;
 }
 
@@ -1113,9 +1113,9 @@ body {
 }
 
 .settings-content {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 22px;
 }
 
 .settings-group {
@@ -1532,3 +1532,51 @@ body {
     overflow-wrap: anywhere;
 }
 .profile-bio.empty { color: var(--text-muted); font-style: italic; }
+
+
+/* Profile picture / bio settings */
+.profile-picture-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bio-input {
+    width: 100%;
+    min-height: 72px;
+    max-height: 110px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font: inherit;
+    outline: none;
+}
+
+.bio-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.bio-counter {
+    align-self: flex-end;
+    margin-top: -2px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.bio-settings-group,
+.settings-content > .settings-group:nth-last-child(-n+2) {
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .settings-content {
+        grid-template-columns: 1fr;
+    }
+}
