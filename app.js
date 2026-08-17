@@ -202,6 +202,7 @@
     const userBadge = $('#user-badge');
     const logoutBtn = $('#logout-btn');
     const settingsBtn = $('#settings-btn');
+    const accountsBtn = $('#accounts-btn');
 
     // Post Form
     const newPostToggle = $('#new-post-toggle');
@@ -247,6 +248,12 @@
     const toastContainer = $('#toast-container');
 
     // Modal
+    const accountsModal = $('#accounts-modal');
+    const closeAccountsBtn = $('#close-accounts-btn');
+    const accountsSearch = $('#accounts-search');
+    const accountsList = $('#accounts-list');
+    const accountsCount = $('#accounts-count');
+
     const deleteModal = $('#delete-modal');
     const cancelDeleteBtn = $('#cancel-delete');
     const confirmDeleteBtn = $('#confirm-delete');
@@ -263,6 +270,7 @@
         bindAuthEvents();
         bindAppEvents();
         bindSettingsEvents();
+        bindAccountsEvents();
 
         // Check for shared database changes every 30 minutes.
         // If nothing changed, the UI is not re-rendered.
@@ -359,10 +367,12 @@
         userAvatar.textContent = session.username.charAt(0);
         userDisplayName.textContent = session.username;
 
-        if (session.role === 'owner') {
+        if (session.username === 'vult' && session.role === 'owner') {
             userBadge.classList.remove('hidden');
+            accountsBtn.classList.remove('hidden');
         } else {
             userBadge.classList.add('hidden');
+            accountsBtn.classList.add('hidden');
         }
 
         renderFeed();
@@ -625,6 +635,63 @@
             applySettings(activeSettings);
             toast('Appearance reset to defaults!', 'success');
         });
+    }
+
+
+    // ─── Owner Accounts ───
+    function renderAccounts() {
+        const session = getSession();
+        if (!session || session.username !== 'vult' || session.role !== 'owner') return;
+
+        const query = (accountsSearch.value || '').trim().toLowerCase();
+        const users = getUsers()
+            .filter(user => !query || user.username.toLowerCase().includes(query))
+            .sort((a, b) => new Date(a.created || 0) - new Date(b.created || 0));
+
+        accountsCount.textContent = `${users.length} account${users.length === 1 ? '' : 's'}`;
+
+        if (!users.length) {
+            accountsList.innerHTML = '<div class="accounts-empty">No accounts found.</div>';
+            return;
+        }
+
+        accountsList.innerHTML = users.map(user => {
+            const created = user.created ? new Date(user.created).toLocaleString() : 'Unknown';
+            const role = user.role || 'member';
+            const isOwner = role === 'owner';
+            return `
+                <div class="account-row">
+                    <div class="account-avatar">${escapeHtml((user.username || '?').charAt(0).toUpperCase())}</div>
+                    <div class="account-main">
+                        <div class="account-name-row">
+                            <strong>${escapeHtml(user.username)}</strong>
+                            <span class="account-role ${isOwner ? 'owner' : ''}">${escapeHtml(role.toUpperCase())}</span>
+                        </div>
+                        <span class="account-created">Created: ${escapeHtml(created)}</span>
+                    </div>
+                    <div class="account-password">Password: <strong>Hidden</strong></div>
+                </div>`;
+        }).join('');
+    }
+
+    function bindAccountsEvents() {
+        accountsBtn.addEventListener('click', async () => {
+            const session = getSession();
+            if (!session || session.username !== 'vult' || session.role !== 'owner') {
+                toast('Owner access required.', 'error');
+                return;
+            }
+            await fetchServerDB(true);
+            renderAccounts();
+            accountsModal.classList.remove('hidden');
+            accountsSearch.focus();
+        });
+
+        closeAccountsBtn.addEventListener('click', () => accountsModal.classList.add('hidden'));
+        accountsModal.addEventListener('click', (e) => {
+            if (e.target === accountsModal) accountsModal.classList.add('hidden');
+        });
+        accountsSearch.addEventListener('input', renderAccounts);
     }
 
     // ─── App Events ───
