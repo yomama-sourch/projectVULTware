@@ -1,5 +1,5 @@
 @echo off
-title VultShare Server
+title Vultware Server
 color 0b
 cd /d "%~dp0"
 

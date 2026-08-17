@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════
-   VultShare — App Logic
+   Vultware — App Logic
    Auth, CRUD, Settings (Color/Wallpaper/Opacity/Reset)
    ══════════════════════════════════════════════════════ */
 
@@ -8,10 +8,10 @@
 
     // ─── Storage Keys ───
     const KEYS = {
-        USERS: 'vultshare_users',
-        SCRIPTS: 'vultshare_scripts',
-        SESSION: 'vultshare_session',
-        SETTINGS: 'vultshare_settings',
+        USERS: 'vultware_users',
+        SCRIPTS: 'vultware_scripts',
+        SESSION: 'vultware_session',
+        SETTINGS: 'vultware_settings',
     };
 
     const DEFAULT_SETTINGS = {

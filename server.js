@@ -135,7 +135,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log('====================================================');
-    console.log(`  VultShare is running at http://localhost:${PORT}`);
+    console.log(`  Vultware is running at http://localhost:${PORT}`);
     console.log('  Database syncing enabled: database.json');
     console.log('====================================================');
     console.log('Press Ctrl+C to stop the server.');
