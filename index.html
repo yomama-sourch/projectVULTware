@@ -225,10 +225,26 @@
                 </div>
 
                 <div class="changelog-timeline">
+                    <!-- Release 1.6.0 -->
+                    <div class="changelog-card">
+                        <div class="changelog-badge-row">
+                            <span class="changelog-tag v-latest">v1.6.0</span>
+                            <span class="changelog-date">Latest Release</span>
+                        </div>
+                        <h3>User Profiles, Owner Moderation & Ban System</h3>
+                        <ul class="changelog-list">
+                            <li><strong>Profile Modal:</strong> Click any author name on a post to view their full post history in a scrollable profile panel.</li>
+                            <li><strong>Ban System:</strong> Owners can permanently ban accounts directly from a user's profile panel.</li>
+                            <li><strong>Suspend System:</strong> Owners can suspend accounts from 1 day to 1 year with preset shortcuts and a live slider.</li>
+                            <li><strong>Login Guard:</strong> Banned and suspended users are blocked at login with a clear status message.</li>
+                            <li><strong>Lift Restrictions:</strong> Owners can unban or unsuspend users directly from the profile panel.</li>
+                        </ul>
+                    </div>
+
                     <!-- Release 1.5.0 -->
                     <div class="changelog-card">
                         <div class="changelog-badge-row">
-                            <span class="changelog-tag v-latest">v1.5.0</span>
+                            <span class="changelog-tag">v1.5.0</span>
                             <span class="changelog-date">Latest Release</span>
                         </div>
                         <h3>Changelog System & Navigation Polish</h3>
@@ -426,6 +442,72 @@
             <div class="modal-actions">
                 <button class="btn-ghost" id="cancel-delete">Cancel</button>
                 <button class="btn-danger" id="confirm-delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Profile Posts Modal -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-card profile-modal-card">
+            <div class="settings-modal-header">
+                <div class="settings-title-group">
+                    <div class="profile-modal-avatar" id="profile-modal-avatar"></div>
+                    <div>
+                        <h3 id="profile-modal-username">Username</h3>
+                        <p class="settings-hint" id="profile-modal-meta">0 scripts</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" id="close-profile-modal" aria-label="Close profile">✕</button>
+            </div>
+            <div id="profile-modal-scripts" class="profile-scripts-list"></div>
+        </div>
+    </div>
+
+    <!-- Ban/Suspend Modal (owner only) -->
+    <div id="ban-modal" class="modal-overlay hidden">
+        <div class="modal-card ban-modal-card">
+            <div class="settings-modal-header">
+                <div class="settings-title-group">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                    <div>
+                        <h3 id="ban-modal-title">Moderate User</h3>
+                        <p class="settings-hint" id="ban-modal-subtitle">Choose an action</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" id="close-ban-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="ban-modal-body">
+                <div class="ban-option-row">
+                    <label class="ban-radio-label">
+                        <input type="radio" name="ban-type" value="ban" id="ban-type-ban">
+                        <span class="ban-radio-custom danger"></span>
+                        <span>Permanent Ban</span>
+                    </label>
+                    <label class="ban-radio-label">
+                        <input type="radio" name="ban-type" value="suspend" id="ban-type-suspend" checked>
+                        <span class="ban-radio-custom"></span>
+                        <span>Suspend</span>
+                    </label>
+                </div>
+                <div class="ban-suspend-duration" id="ban-suspend-duration">
+                    <label class="settings-label" for="suspend-days">Duration</label>
+                    <div class="suspend-slider-row">
+                        <input type="range" id="suspend-days" min="1" max="365" value="7" class="range-slider">
+                        <span id="suspend-days-val" class="slider-value">7 days</span>
+                    </div>
+                    <div class="suspend-presets">
+                        <button type="button" class="suspend-preset-btn" data-days="1">1 day</button>
+                        <button type="button" class="suspend-preset-btn" data-days="7">1 week</button>
+                        <button type="button" class="suspend-preset-btn" data-days="30">1 month</button>
+                        <button type="button" class="suspend-preset-btn" data-days="90">3 months</button>
+                        <button type="button" class="suspend-preset-btn" data-days="365">1 year</button>
+                    </div>
+                </div>
+                <div class="ban-modal-actions">
+                    <button type="button" class="btn-ghost" id="cancel-ban-modal">Cancel</button>
+                    <button type="button" class="btn-danger" id="confirm-ban-action">Apply</button>
+                </div>
             </div>
         </div>
     </div>
