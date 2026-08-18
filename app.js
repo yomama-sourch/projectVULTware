@@ -932,41 +932,49 @@
 
     // ─── Profile Modal ───
     function openProfileModal(username) {
+        // Always use live querySelector so null-ref timing is never an issue
+        const pModal = document.getElementById('profile-modal');
+        const pAvatar = document.getElementById('profile-modal-avatar');
+        const pUsername = document.getElementById('profile-modal-username');
+        const pMeta = document.getElementById('profile-modal-meta');
+        const pScripts = document.getElementById('profile-modal-scripts');
+        if (!pModal) return;
+
         const scripts = getScripts().filter(s => s.author === username);
         const users = getUsers();
-        const user = users.find(u => u.username === username);
+        const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
-        profileModalAvatar.textContent = username.charAt(0).toUpperCase();
-        profileModalUsername.textContent = username;
+        pAvatar.textContent = username.charAt(0).toUpperCase();
+        pUsername.textContent = username;
 
         const roleTag = user && user.role === 'owner' ? ' · OWNER' : '';
         const banStatus = user ? getBanStatus(user) : null;
-        profileModalMeta.textContent = `${scripts.length} script${scripts.length !== 1 ? 's' : ''}${roleTag}${banStatus ? ' · ⚠ ' + banStatus : ''}`;
+        pMeta.textContent = `${scripts.length} script${scripts.length !== 1 ? 's' : ''}${roleTag}${banStatus ? ' · ⚠ ' + banStatus : ''}`;
 
         const session = getSession();
         const isOwner = session && session.role === 'owner';
-        const isSelf = session && session.username === username;
+        const isSelf = session && session.username.toLowerCase() === username.toLowerCase();
+        const canModerate = isOwner && !isSelf && user && user.role !== 'owner';
 
-        // Render owner ban controls if applicable
+        // Owner moderation bar — only visible to owner, never on self or other owners
         let ownerControls = '';
-        if (isOwner && !isSelf && user && user.role !== 'owner') {
-            const banStatus2 = getBanStatus(user);
-            ownerControls = `
-                <div class="profile-owner-controls">
-                    ${banStatus2
-                        ? `<span class="profile-ban-status">${escapeHtml(banStatus2)}</span>
-                           <button class="btn-ghost profile-unban-btn" data-username="${escapeHtml(username)}">Lift Restriction</button>`
-                        : `<button class="btn-danger profile-ban-btn" data-username="${escapeHtml(username)}">Ban / Suspend</button>`
-                    }
-                </div>`;
+        if (canModerate) {
+            ownerControls = `<div class="profile-owner-controls">
+                ${banStatus
+                    ? `<span class="profile-ban-status">⚠ ${escapeHtml(banStatus)}</span>
+                       <button class="btn-ghost profile-unban-btn" data-username="${escapeHtml(username)}">Lift Restriction</button>`
+                    : `<button class="btn-danger profile-ban-btn" data-username="${escapeHtml(username)}">Ban / Suspend</button>`
+                }
+            </div>`;
         }
 
-        if (scripts.length === 0) {
-            profileModalScripts.innerHTML = ownerControls + '<div class="profile-empty">No scripts posted yet.</div>';
-        } else {
-            profileModalScripts.innerHTML = ownerControls + scripts.map(s => `
+        const scriptRows = scripts.length === 0
+            ? '<div class="profile-empty">No scripts posted yet.</div>'
+            : scripts.map(s => `
                 <div class="profile-script-row">
-                    ${s.thumbnail ? `<img class="profile-script-thumb" src="${s.thumbnail}" alt="">` : '<div class="profile-script-thumb-placeholder"></div>'}
+                    ${s.thumbnail
+                        ? `<img class="profile-script-thumb" src="${s.thumbnail}" alt="">`
+                        : '<div class="profile-script-thumb-placeholder"></div>'}
                     <div class="profile-script-info">
                         <span class="profile-script-title">${escapeHtml(s.title)}</span>
                         <span class="profile-script-meta">
@@ -976,18 +984,17 @@
                         </span>
                     </div>
                 </div>`).join('');
-        }
 
-        // Wire ban button in profile modal
-        const banBtn = profileModalScripts.querySelector('.profile-ban-btn');
+        pScripts.innerHTML = ownerControls + scriptRows;
+
+        // Wire ban button
+        const banBtn = pScripts.querySelector('.profile-ban-btn');
         if (banBtn) {
-            banBtn.addEventListener('click', () => {
-                openBanModal(banBtn.dataset.username);
-            });
+            banBtn.addEventListener('click', () => openBanModal(banBtn.dataset.username));
         }
 
         // Wire unban button
-        const unbanBtn = profileModalScripts.querySelector('.profile-unban-btn');
+        const unbanBtn = pScripts.querySelector('.profile-unban-btn');
         if (unbanBtn) {
             unbanBtn.addEventListener('click', async () => {
                 unbanBtn.disabled = true;
@@ -1005,79 +1012,97 @@
             });
         }
 
-        profileModal.classList.remove('hidden');
+        pModal.classList.remove('hidden');
     }
 
     // ─── Ban/Suspend Modal ───
     function openBanModal(username) {
+        const bModal = document.getElementById('ban-modal');
+        if (!bModal) return;
         pendingBanUsername = username;
-        banModalTitle.textContent = `Moderate: ${username}`;
-        banModalSubtitle.textContent = 'Select action and duration';
-        banTypeSuspend.checked = true;
-        banSuspendDuration.classList.remove('hidden');
-        suspendDaysSlider.value = 7;
-        suspendDaysVal.textContent = '7 days';
-        banModal.classList.remove('hidden');
+        document.getElementById('ban-modal-title').textContent = `Moderate: ${username}`;
+        document.getElementById('ban-modal-subtitle').textContent = 'Select action and duration';
+        document.getElementById('ban-type-suspend').checked = true;
+        document.getElementById('ban-suspend-duration').classList.remove('hidden');
+        const slider = document.getElementById('suspend-days');
+        slider.value = 7;
+        document.getElementById('suspend-days-val').textContent = '7 days';
+        bModal.classList.remove('hidden');
+    }
+
+    function formatDays(d) {
+        if (d === 1) return '1 day';
+        if (d >= 365) return '1 year';
+        if (d >= 30) { const m = Math.round(d / 30); return `${m} month${m > 1 ? 's' : ''}`; }
+        return `${d} days`;
     }
 
     function bindBanModalEvents() {
-        closeBanModal.addEventListener('click', () => banModal.classList.add('hidden'));
-        cancelBanModal.addEventListener('click', () => banModal.classList.add('hidden'));
-        banModal.addEventListener('click', (e) => { if (e.target === banModal) banModal.classList.add('hidden'); });
+        const bModal = document.getElementById('ban-modal');
+        if (!bModal) return;
 
-        [banTypeBan, banTypeSuspend].forEach(radio => {
+        document.getElementById('close-ban-modal').addEventListener('click', () => bModal.classList.add('hidden'));
+        document.getElementById('cancel-ban-modal').addEventListener('click', () => bModal.classList.add('hidden'));
+        bModal.addEventListener('click', (e) => { if (e.target === bModal) bModal.classList.add('hidden'); });
+
+        const banTypeBanEl = document.getElementById('ban-type-ban');
+        const banTypeSuspendEl = document.getElementById('ban-type-suspend');
+        const durationEl = document.getElementById('ban-suspend-duration');
+        const sliderEl = document.getElementById('suspend-days');
+        const sliderValEl = document.getElementById('suspend-days-val');
+
+        [banTypeBanEl, banTypeSuspendEl].forEach(radio => {
             radio.addEventListener('change', () => {
-                banSuspendDuration.classList.toggle('hidden', banTypeBan.checked);
+                durationEl.classList.toggle('hidden', banTypeBanEl.checked);
             });
         });
 
-        suspendDaysSlider.addEventListener('input', () => {
-            const d = parseInt(suspendDaysSlider.value, 10);
-            suspendDaysVal.textContent = d === 1 ? '1 day' : d >= 365 ? '1 year' : d >= 30 ? `${Math.round(d/30)} month${Math.round(d/30)>1?'s':''}` : `${d} days`;
+        sliderEl.addEventListener('input', () => {
+            sliderValEl.textContent = formatDays(parseInt(sliderEl.value, 10));
         });
 
-        $$('.suspend-preset-btn').forEach(btn => {
+        document.querySelectorAll('.suspend-preset-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const d = parseInt(btn.dataset.days, 10);
-                suspendDaysSlider.value = d;
-                suspendDaysSlider.dispatchEvent(new Event('input'));
+                sliderEl.value = btn.dataset.days;
+                sliderValEl.textContent = formatDays(parseInt(btn.dataset.days, 10));
             });
         });
 
-        confirmBanAction.addEventListener('click', async () => {
+        const confirmBtn = document.getElementById('confirm-ban-action');
+        confirmBtn.addEventListener('click', async () => {
             if (!pendingBanUsername) return;
-            confirmBanAction.disabled = true;
-            confirmBanAction.textContent = 'Applying...';
-
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Applying...';
             try {
                 let banData;
-                if (banTypeBan.checked) {
+                if (banTypeBanEl.checked) {
                     banData = { banned: true, suspended_until: null };
                 } else {
-                    const days = parseInt(suspendDaysSlider.value, 10);
+                    const days = parseInt(sliderEl.value, 10);
                     const until = new Date(Date.now() + days * 86400000).toISOString();
                     banData = { banned: false, suspended_until: until };
                 }
-
                 await banUser(pendingBanUsername, banData);
-                banModal.classList.add('hidden');
-                profileModal.classList.add('hidden');
+                bModal.classList.add('hidden');
+                document.getElementById('profile-modal').classList.add('hidden');
                 await fetchServerDB(true);
-                const action = banTypeBan.checked ? 'permanently banned' : 'suspended';
+                const action = banTypeBanEl.checked ? 'permanently banned' : 'suspended';
                 toast(`${pendingBanUsername} ${action}.`, 'success');
                 pendingBanUsername = null;
             } catch (err) {
                 toast(err.message || 'Could not apply moderation.', 'error');
             } finally {
-                confirmBanAction.disabled = false;
-                confirmBanAction.textContent = 'Apply';
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Apply';
             }
         });
     }
 
     function bindProfileModalEvents() {
-        closeProfileModal.addEventListener('click', () => profileModal.classList.add('hidden'));
-        profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.add('hidden'); });
+        const pModal = document.getElementById('profile-modal');
+        if (!pModal) return;
+        document.getElementById('close-profile-modal').addEventListener('click', () => pModal.classList.add('hidden'));
+        pModal.addEventListener('click', (e) => { if (e.target === pModal) pModal.classList.add('hidden'); });
     }
 
     // ─── Render Feed ───
